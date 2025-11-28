@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Django TODO App{% endblock %}
+
+{% block heading %}My TODO List{% endblock %}
+
+{% block content %}
+<!-- Form to create new TODO -->
+<form method="post" action="{% url 'home' %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="title">Title *</label>
+        <input type="text" id="title" name="title" required placeholder="Enter TODO title">
+    </div>
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" placeholder="Enter TODO description (optional)"></textarea>
+    </div>
+    <div class="form-group">
+        <label for="due_date">Due Date</label>
+        <input type="date" id="due_date" name="due_date">
+    </div>
+    <button type="submit" class="btn btn-primary">Create TODO</button>
+</form>
+
+<!-- TODO List -->
+{% if todos %}
+<ul class="todo-list">
+    {% for todo in todos %}
+    <li class="todo-item {% if todo.is_completed %}completed{% endif %}">
+        <div class="todo-content">
+            <div class="todo-title">{{ todo.title }}</div>
+            {% if todo.description %}
+            <div class="todo-description">{{ todo.description }}</div>
+            {% endif %}
+            <div class="todo-meta">
+                {% if todo.due_date %}
+                <strong>Due:</strong> {{ todo.due_date|date:"M d, Y" }} | 
+                {% endif %}
+                <strong>Status:</strong> {% if todo.is_completed %}Completed{% else %}Pending{% endif %} |
+                <strong>Created:</strong> {{ todo.created_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+        <div class="todo-actions">
+            <a href="{% url 'toggle_complete' todo.id %}" class="btn {% if todo.is_completed %}btn-warning{% else %}btn-success{% endif %}">
+                {% if todo.is_completed %}Mark Incomplete{% else %}Mark Complete{% endif %}
+            </a>
+            <a href="{% url 'edit_todo' todo.id %}" class="btn btn-secondary">Edit</a>
+            <a href="{% url 'delete_todo' todo.id %}" class="btn btn-danger">Delete</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<div class="empty-state">
+    <p>No TODOs yet. Create your first TODO above!</p>
+</div>
+{% endif %}
+{% endblock %}
+
+
