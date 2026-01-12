@@ -1,0 +1,623 @@
+openapi: 3.0.3
+info:
+  title: Forum API Wrapper
+  description: |
+    A modern REST API wrapper for the ReSQL forum, providing access to forum data
+    including topics, posts, users, and search functionality.
+  version: 1.0.0
+  contact:
+    name: Forum API Support
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+  - url: https://api.example.com/api
+    description: Production server
+
+tags:
+  - name: topics
+    description: Forum topics operations
+  - name: posts
+    description: Forum posts operations
+  - name: users
+    description: User operations
+  - name: forums
+    description: Forum categories operations
+  - name: search
+    description: Search operations
+  - name: health
+    description: Health check operations
+
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: Check if the API is running
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /forums:
+    get:
+      tags:
+        - forums
+      summary: List all forums
+      description: Get a list of all forum categories
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of forums
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForumListResponse'
+
+  /forums/{forumId}:
+    get:
+      tags:
+        - forums
+      summary: Get forum by ID
+      description: Get details of a specific forum
+      parameters:
+        - name: forumId
+          in: path
+          required: true
+          description: Forum ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Forum details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forum'
+        '404':
+          description: Forum not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /topics:
+    get:
+      tags:
+        - topics
+      summary: List topics
+      description: Get a list of forum topics with optional filtering
+      parameters:
+        - name: forumId
+          in: query
+          description: Filter by forum ID
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [newest, oldest, most_replies, most_views]
+            default: newest
+      responses:
+        '200':
+          description: List of topics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicListResponse'
+
+  /topics/{topicId}:
+    get:
+      tags:
+        - topics
+      summary: Get topic by ID
+      description: Get details of a specific topic including its posts
+      parameters:
+        - name: topicId
+          in: path
+          required: true
+          description: Topic ID
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Page number for posts (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of posts per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Topic details with posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicDetail'
+        '404':
+          description: Topic not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /posts:
+    get:
+      tags:
+        - posts
+      summary: List posts
+      description: Get a list of posts with optional filtering
+      parameters:
+        - name: topicId
+          in: query
+          description: Filter by topic ID
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          description: Filter by user ID
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListResponse'
+
+  /posts/{postId}:
+    get:
+      tags:
+        - posts
+      summary: Get post by ID
+      description: Get details of a specific post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: Post ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users:
+    get:
+      tags:
+        - users
+      summary: List users
+      description: Get a list of forum users
+      parameters:
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+
+  /users/{userId}:
+    get:
+      tags:
+        - users
+      summary: Get user by ID
+      description: Get details of a specific user including their activity
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetail'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /search:
+    get:
+      tags:
+        - search
+      summary: Search forum content
+      description: Search across topics, posts, and users
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter by content type
+          schema:
+            type: string
+            enum: [all, topics, posts, users]
+            default: all
+        - name: forumId
+          in: query
+          description: Filter by forum ID
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+components:
+  schemas:
+    Forum:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Forum ID
+        name:
+          type: string
+          description: Forum name
+        description:
+          type: string
+          description: Forum description
+        topicCount:
+          type: integer
+          description: Number of topics in this forum
+        postCount:
+          type: integer
+          description: Number of posts in this forum
+        createdAt:
+          type: string
+          format: date-time
+          description: When the forum was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update time
+
+    ForumListResponse:
+      type: object
+      properties:
+        forums:
+          type: array
+          items:
+            $ref: '#/components/schemas/Forum'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Topic ID
+        title:
+          type: string
+          description: Topic title
+        forumId:
+          type: integer
+          description: Forum ID this topic belongs to
+        forumName:
+          type: string
+          description: Forum name
+        authorId:
+          type: integer
+          description: User ID of the topic author
+        authorName:
+          type: string
+          description: Username of the topic author
+        replyCount:
+          type: integer
+          description: Number of replies
+        viewCount:
+          type: integer
+          description: Number of views
+        lastPostId:
+          type: integer
+          description: ID of the last post
+        lastPostAt:
+          type: string
+          format: date-time
+          description: Timestamp of the last post
+        createdAt:
+          type: string
+          format: date-time
+          description: When the topic was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update time
+
+    TopicListResponse:
+      type: object
+      properties:
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    TopicDetail:
+      allOf:
+        - $ref: '#/components/schemas/Topic'
+        - type: object
+          properties:
+            posts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+            postPagination:
+              $ref: '#/components/schemas/Pagination'
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Post ID
+        topicId:
+          type: integer
+          description: Topic ID this post belongs to
+        topicTitle:
+          type: string
+          description: Topic title
+        authorId:
+          type: integer
+          description: User ID of the post author
+        authorName:
+          type: string
+          description: Username of the post author
+        content:
+          type: string
+          description: Post content (HTML)
+        isFirstPost:
+          type: boolean
+          description: Whether this is the first post in the topic
+        createdAt:
+          type: string
+          format: date-time
+          description: When the post was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update time
+
+    PostListResponse:
+      type: object
+      properties:
+        posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: User ID
+        username:
+          type: string
+          description: Username
+        postCount:
+          type: integer
+          description: Number of posts by this user
+        topicCount:
+          type: integer
+          description: Number of topics created by this user
+        registeredAt:
+          type: string
+          format: date-time
+          description: Registration date
+        lastActiveAt:
+          type: string
+          format: date-time
+          description: Last activity timestamp
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    UserDetail:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            recentTopics:
+              type: array
+              items:
+                $ref: '#/components/schemas/Topic'
+              description: Recent topics created by this user
+            recentPosts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+              description: Recent posts by this user
+
+    SearchResponse:
+      type: object
+      properties:
+        results:
+          type: object
+          properties:
+            topics:
+              type: array
+              items:
+                $ref: '#/components/schemas/Topic'
+            posts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+            users:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        query:
+          type: string
+          description: The search query
+        totalResults:
+          type: integer
+          description: Total number of results
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+        limit:
+          type: integer
+          description: Items per page
+        total:
+          type: integer
+          description: Total number of items
+        totalPages:
+          type: integer
+          description: Total number of pages
+        hasNext:
+          type: boolean
+          description: Whether there is a next page
+        hasPrev:
+          type: boolean
+          description: Whether there is a previous page
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details

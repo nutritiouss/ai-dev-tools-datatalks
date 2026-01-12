@@ -1,0 +1,10 @@
+*.md
+.git
+.gitignore
+.env
+*.log
+*.db
+*.sqlite
+coverage
+.nyc_output
+tests
